@@ -37,18 +37,18 @@ class WebClient extends Client
      */
     protected $port = 9998;
 
-    private $_curlOptions = array();
+    private $_timeout;
 
     /**
      * Is server running?
      *
      * @param string $host
      * @param int $port
-     * @param array $curlOptions
+     * @param int $timeout
      *
      * @throws Exception
      */
-    public function __construct($host = null, $port = null, array $curlOptions = array())
+    public function __construct($host = null, $port = null, $timeout = 5)
     {
         if ($host) {
             $this->host = $host;
@@ -57,11 +57,11 @@ class WebClient extends Client
         if ($port) {
             $this->port = $port;
         }
-        $this->_curlOptions = $curlOptions;
-        $this->exec(array_merge([
+        $this->_timeout = $timeout;
+        $this->exec([
             CURLOPT_TIMEOUT => 1,
             CURLOPT_URL => "http://{$this->host}:{$this->port}/tika",
-        ], $curlOptions));
+        ]);
     }
 
     /**
@@ -118,8 +118,7 @@ class WebClient extends Client
         }
 
         // cURL base options
-        $options = $this->_curlOptions;
-        $options[CURLOPT_PUT] = true;
+        $options = [CURLOPT_PUT => true];
 
         // remote file options
         if ($file && preg_match('/^http/', $file)) {
@@ -204,7 +203,7 @@ class WebClient extends Client
         [
             CURLINFO_HEADER_OUT => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 5,
+            CURLOPT_TIMEOUT => $this->_timeout,
         ] + $options);
 
         // get the response and the HTTP status code
