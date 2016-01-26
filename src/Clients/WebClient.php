@@ -37,15 +37,18 @@ class WebClient extends Client
      */
     protected $port = 9998;
 
+    private $_curlOptions = array();
+
     /**
      * Is server running?
      *
      * @param string $host
-     * @param int    $port
+     * @param int $port
+     * @param array $curlOptions
      *
      * @throws Exception
      */
-    public function __construct($host = null, $port = null)
+    public function __construct($host = null, $port = null, array $curlOptions = array())
     {
         if ($host) {
             $this->host = $host;
@@ -54,11 +57,11 @@ class WebClient extends Client
         if ($port) {
             $this->port = $port;
         }
-
-        $this->exec([
+        $this->_curlOptions = $curlOptions;
+        $this->exec(array_merge([
             CURLOPT_TIMEOUT => 1,
             CURLOPT_URL => "http://{$this->host}:{$this->port}/tika",
-        ]);
+        ], $curlOptions));
     }
 
     /**
@@ -115,7 +118,8 @@ class WebClient extends Client
         }
 
         // cURL base options
-        $options = [CURLOPT_PUT => true];
+        $options = $this->_curlOptions;
+        $options[CURLOPT_PUT] = true;
 
         // remote file options
         if ($file && preg_match('/^http/', $file)) {
